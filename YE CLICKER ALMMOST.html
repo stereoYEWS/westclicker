@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YE CLICKER — Become Ye</title>
+<style>
+  @font-face {
+    font-family: 'Impact-ish';
+    src: local('Arial Black');
+  }
+
+  :root{
+    --bg: #0a0a0a;
+    --panel: #141414;
+    --panel-2: #1c1c1c;
+    --line: #2a2a2a;
+    --text: #f2efe9;
+    --dim: #8a8580;
+    --accent: #d9c27e; /* dropout gold */
+    --accent-2: #b0281f; /* graduation red */
+    --era-accent: #d9c27e;
+    --era-accent-2: #b0281f;
+    --grain-opacity: 0.05;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; height:100%; background:var(--bg); overflow-x:hidden; }
+  body{
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text);
+    min-height:100vh;
+    position:relative;
+    transition: background 0.8s ease;
+  }
+
+  /* film grain overlay */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:999;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  .vignette{
+    position:fixed; inset:0; pointer-events:none; z-index:998;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+  }
+
+  .wrap{
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 18px 16px 100px;
+    position:relative;
+    z-index:1;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    text-align:center;
+    padding: 18px 0 10px;
+  }
+  .logo{
+    font-family: Impact, 'Arial Black', sans-serif;
+    font-size: 44px;
+    letter-spacing: 2px;
+    line-height: 0.9;
+    text-transform: uppercase;
+    color: var(--text);
+    text-shadow: 0 0 20px rgba(217,194,126,0.25);
+  }
+  .logo span{ color: var(--era-accent); }
+  .tagline{
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+  .player-title{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top: 10px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--era-accent);
+    color: var(--era-accent);
+    background: rgba(217,194,126,0.08);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .era-banner{
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: linear-gradient(90deg, var(--era-accent) 0%, transparent 100%);
+    background-color: var(--panel-2);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--era-accent);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size: 12px;
+  }
+  .era-banner .era-name{
+    font-family: Impact, 'Arial Black', sans-serif;
+    letter-spacing: 1px;
+    font-size: 16px;
+    text-transform: uppercase;
+  }
+  .era-banner .era-year{ color: var(--dim); font-size: 11px; }
+
+  /* ---------- STATS ---------- */
+  .stats-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin: 16px 0 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .points-main{
+    font-family: Impact, 'Arial Black', sans-serif;
+    font-size: 42px;
+    line-height: 1;
+  }
+  .points-main small{
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    color: var(--dim);
+    font-weight: normal;
+    margin-left: 6px;
+  }
+  .rate{
+    font-size: 12px;
+    color: var(--dim);
+    text-align:right;
+  }
+  .rate b{ color: var(--era-accent); }
+
+  /* ---------- CLICK STAGE ---------- */
+  .stage{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    margin: 18px 0 8px;
+    min-height: 300px;
+  }
+
+  #clickBtn{
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 3px solid var(--era-accent);
+    background: radial-gradient(circle at 35% 30%, #2a2a2a, #0d0d0d 70%);
+    cursor: pointer;
+    position: relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 88px;
+    box-shadow: 0 0 0 0 rgba(217,194,126,0.5), inset 0 0 40px rgba(0,0,0,0.6);
+    transition: transform 0.06s ease, box-shadow 0.2s ease, border-color 0.6s ease;
+    user-select:none;
+    touch-action: manipulation;
+  }
+  #clickBtn:active{ transform: scale(0.93); }
+  #clickBtn.pulse{
+    animation: pulseGlow 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseGlow{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(217,194,126,0.35), inset 0 0 40px rgba(0,0,0,0.6); }
+    50%{ box-shadow: 0 0 0 14px rgba(217,194,126,0), inset 0 0 40px rgba(0,0,0,0.6); }
+  }
+
+  .float-pts{
+    position:absolute;
+    font-family: Impact, 'Arial Black', sans-serif;
+    font-size: 20px;
+    color: var(--era-accent);
+    pointer-events:none;
+    animation: floatUp 0.9s ease-out forwards;
+    text-shadow: 0 0 8px rgba(0,0,0,0.8);
+    z-index: 50;
+  }
+  @keyframes floatUp{
+    0%{ opacity:1; transform: translate(-50%,0) scale(1); }
+    100%{ opacity:0; transform: translate(-50%,-70px) scale(1.3); }
+  }
+
+  .click-hint{
+    margin-top: 14px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .buff-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-top: 10px;
+    min-height: 26px;
+  }
+  .buff-chip{
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--era-accent);
+    color: var(--era-accent);
+    background: rgba(217,194,126,0.08);
+    letter-spacing: 0.5px;
+  }
+
+  /* ---------- TABS ---------- */
+  .tabs{
+    display:flex;
+    gap: 4px;
+    margin: 22px 0 12px;
+    border-bottom: 1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tab-btn{
+    background:none;
+    border:none;
+    color: var(--dim);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    cursor:pointer;
+    white-space:nowrap;
+    border-bottom: 2px solid transparent;
+    font-weight: 600;
+  }
+  .tab-btn.active{
+    color: var(--text);
+    border-bottom-color: var(--era-accent);
+  }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .section-label{
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 18px 0 8px;
+  }
+  .section-label:first-child{ margin-top:0; }
+
+  /* ---------- CARDS (generic) ---------- */
+  .card-list{ display:flex; flex-direction:column; gap:8px; }
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px;
+    display:flex;
+    align-items:center;
+    gap: 12px;
+  }
+  .card-icon{
+    width: 44px; height:44px;
+    border-radius: 6px;
+    background: var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 22px;
+    flex-shrink:0;
+    border: 1px solid var(--line);
+  }
+  .card-body{ flex:1; min-width:0; }
+  .card-title{ font-size: 14px; font-weight:700; }
+  .card-desc{ font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .card-meta{ font-size: 11px; color: var(--era-accent); margin-top: 3px; }
+  .card-action{
+    flex-shrink:0;
+  }
+  .buy-btn{
+    background: var(--era-accent);
+    color: #111;
+    border:none;
+    font-weight:700;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+  }
+  .buy-btn:active{ transform: scale(0.95); }
+  .buy-btn:disabled{
+    background: var(--panel-2);
+    color: var(--dim);
+    cursor:not-allowed;
+    border: 1px solid var(--line);
+  }
+  .owned-tag{
+    font-size: 11px;
+    color: var(--dim);
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+  }
+  .card.locked{ opacity: 0.4; filter: grayscale(0.6); }
+  .card.locked .card-desc{ font-style: italic; }
+
+  /* Era progress bar */
+  .era-progress-wrap{ margin-bottom: 14px; }
+  .era-bar-track{
+    width:100%; height: 6px;
+    background: var(--panel-2);
+    border-radius: 4px;
+    overflow:hidden;
+    margin-top: 6px;
+  }
+  .era-bar-fill{
+    height:100%;
+    background: linear-gradient(90deg, var(--era-accent), var(--era-accent-2));
+    width:0%;
+    transition: width 0.4s ease;
+  }
+  .era-bar-label{ font-size:11px; color:var(--dim); display:flex; justify-content:space-between; }
+
+  /* Achievement toast */
+  .toast-stack{
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+    width: min(92vw, 420px);
+    pointer-events:none;
+  }
+  .toast{
+    background: var(--panel);
+    border: 1px solid var(--era-accent);
+    border-left: 4px solid var(--era-accent);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    animation: toastIn 0.3s ease, toastOut 0.4s ease 2.6s forwards;
+  }
+  .toast b{ display:block; font-size:13px; margin-bottom:2px; color: var(--era-accent); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(-12px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-12px);} }
+
+  /* Bear evolution display */
+  .bear-stage{
+    text-align:center;
+    padding: 10px 0 4px;
+  }
+  .bear-stage .emoji{ font-size: 70px; display:block; filter: drop-shadow(0 0 20px rgba(217,194,126,0.3)); }
+  .bear-stage .stage-name{
+    font-family: Impact, 'Arial Black', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .bear-stage .stage-desc{ font-size: 11px; color: var(--dim); margin-top: 2px; max-width: 320px; margin-left:auto; margin-right:auto; }
+
+  footer{
+    text-align:center;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 1px;
+    padding: 24px 0 8px;
+  }
+
+  .reset-wrap{ margin-top: 16px; }
+  .reset-btn{
+    background: transparent;
+    border: 1px solid var(--accent-2);
+    color: var(--accent-2);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .reset-btn:active{
+    background: var(--accent-2);
+    color: var(--bg);
+  }
+
+  /* ---------- RESET CONFIRM MODAL ---------- */
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 20px;
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+  }
+  .modal-title{
+    font-family: Impact, 'Arial Black', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .modal-desc{
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+  .modal-actions{
+    display:flex;
+    gap: 10px;
+  }
+  .modal-btn{
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    border: 1px solid var(--line);
+  }
+  .modal-btn-cancel{
+    background: transparent;
+    color: var(--text);
+  }
+  .modal-btn-confirm{
+    background: var(--accent-2);
+    border-color: var(--accent-2);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  ::-webkit-scrollbar{ height:6px; width:6px; }
+  ::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="vignette"></div>
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="logo">YE <span>CLICKER</span></div>
+    <div class="tagline">Кликай. Прокачивайся. Стань Louis Vuitton Don. 🐻</div>
+    <div class="player-title" id="playerTitle" style="display:none;"></div>
+  </header>
+
+  <div class="era-banner">
+    <div>
+      <div class="era-name" id="eraName">THE COLLEGE DROPOUT</div>
+      <div class="era-year" id="eraYear">2004</div>
+    </div>
+    <div style="font-size:26px" id="eraIcon">🎓</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="points-main"><span id="pointsVal">0</span><small>YE POINTS</small></div>
+    <div class="rate">за клик: <b id="perClickVal">1</b><br>пассивно: <b id="perSecVal">0</b>/сек</div>
+  </div>
+
+  <div class="stage">
+    <div id="clickBtn">🐻</div>
+    <div class="click-hint">кликай здесь</div>
+    <div class="buff-row" id="buffRow"></div>
+  </div>
+
+  <div class="era-progress-wrap">
+    <div class="era-bar-label"><span id="eraProgLabel">До следующей эры</span><span id="eraProgNum">0 / 0</span></div>
+    <div class="era-bar-track"><div class="era-bar-fill" id="eraBarFill"></div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="upgrades">Апгрейды</button>
+    <button class="tab-btn" data-tab="eras">Эры</button>
+    <button class="tab-btn" data-tab="shop">YEEZY.COM</button>
+    <button class="tab-btn" data-tab="features">Фиты</button>
+    <button class="tab-btn" data-tab="achievements">Ачивки <span id="achievementsTabCount" style="opacity:0.7;"></span></button>
+  </div>
+
+  <!-- UPGRADES -->
+  <div class="panel active" id="panel-upgrades">
+    <div class="section-label">Множители клика</div>
+    <div class="card-list" id="clickUpgradesList"></div>
+    <div class="section-label">Пассивный доход</div>
+    <div class="card-list" id="passiveUpgradesList"></div>
+  </div>
+
+  <!-- ERAS -->
+  <div class="panel" id="panel-eras">
+    <div class="section-label">Эры Ye</div>
+    <div class="card-list" id="erasList"></div>
+  </div>
+
+  <!-- SHOP -->
+  <div class="panel" id="panel-shop">
+    <div class="section-label">YEEZY.COM — виртуальный гардероб</div>
+    <div class="card-list" id="shopList"></div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="panel" id="panel-features">
+    <div class="section-label">Фиты — открывай артистов</div>
+    <div class="card-list" id="featuresList"></div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="panel" id="panel-achievements">
+    <div class="section-label">Ачивки <span id="achievementsCount" style="opacity:0.7;font-weight:400;"></span></div>
+    <div class="card-list" id="achievementsList"></div>
+  </div>
+
+  <footer>
+    YE CLICKER — фан-проект, не связан с Ye / GOOD Music / adidas.<br>
+    прогресс сохраняется локально в этом браузере
+    <div class="reset-wrap">
+      <button id="resetBtn" class="reset-btn" type="button">Сбросить прогресс</button>
+    </div>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box">
+    <div class="modal-title">Вы точно хотите сбросить прогресс?</div>
+    <div class="modal-desc">Все очки, апгрейды и достижения будут удалены безвозвратно.</div>
+    <div class="modal-actions">
+      <button id="resetCancelBtn" class="modal-btn modal-btn-cancel" type="button">Отмена</button>
+      <button id="resetConfirmBtn" class="modal-btn modal-btn-confirm" type="button">Сбросить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="prestigeModal">
+  <div class="modal-box">
+    <div style="font-size:52px;line-height:1;margin-bottom:6px;">👑</div>
+    <div class="modal-title">LOUIS VUITTON DON</div>
+    <div class="modal-desc">Ты прошёл весь путь: все апгрейды прокачаны до максимума, весь гардероб YEEZY.COM куплен, все эры открыты и все ачивки собраны. Ye Clicker пройдена полностью.<br><br>Тебе присвоен титул <b style="color:var(--era-accent)">Louis Vuitton Don</b> — он останется с тобой навсегда, даже если начать заново.</div>
+    <div class="modal-actions">
+      <button id="prestigeRestartBtn" class="modal-btn modal-btn-confirm" type="button">Начать заново с титулом</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     DATA
+     ========================================================= */
+
+  const ERAS = [
+    { id:'dropout',   name:'THE COLLEGE DROPOUT', year:'2004', icon:'🎓', accent:'#d9c27e', accent2:'#8a6d1f', need:0,     desc:'Начало. Семплы соул, хор, медведь в шапке.' },
+    { id:'lateReg',    name:'LATE REGISTRATION',   year:'2005', icon:'🧸', accent:'#c98a3f', accent2:'#7a4a1a', need:50,    desc:'Оркестровка Джона Бриона, медведь в мантии.' },
+    { id:'grad',       name:'GRADUATION',          year:'2007', icon:'🌈', accent:'#e0b64a', accent2:'#a9782b', need:180,   desc:'Аниме-медведь, стадионный поп-рэп, «Stronger».' },
+    { id:'808s',       name:'808S & HEARTBREAK',   year:'2008', icon:'💔', accent:'#7b8fa6', accent2:'#2f3d4d', need:500,   desc:'Автотюн, минимализм, эмоциональная броня.' },
+    { id:'mbdtf',      name:'MY BEAUTIFUL DARK TWISTED FANTASY', year:'2010', icon:'🩰', accent:'#b0281f', accent2:'#4a0f0c', need:1300, desc:'Максимализм, балерины, монстр Ye.' },
+    { id:'yeezus',     name:'YEEZUS', year:'2013', icon:'⛔', accent:'#c9c9c9', accent2:'#3a3a3a', need:3200, desc:'Индастриал, минимал-обложка, агрессия.' },
+    { id:'tlop',       name:'THE LIFE OF PABLO', year:'2016', icon:'🕊️', accent:'#e8dfcb', accent2:'#8f7a4a', need:7500, desc:'Живая правка альбома, госпел-хаос.' },
+    { id:'ye',         name:'YE', year:'2018', icon:'🏔️', accent:'#8fbf6b', accent2:'#3d5c2c', need:17000, desc:'Вайоминг, обложка-фото гор, «I hate being Bipolar».' },
+    { id:'jik',        name:'JESUS IS KING', year:'2019', icon:'✝️', accent:'#d6c199', accent2:'#7a6537', need:38000, desc:'Sunday Service, госпел-хор, духовный поворот.' },
+    { id:'donda',      name:'DONDA', year:'2021', icon:'🖤', accent:'#111111', accent2:'#4a4a4a', need:85000, desc:'Стадионные прослушивания, чёрный монолит.' },
+    { id:'donda2',     name:'DONDA 2', year:'2022', icon:'🌀', accent:'#5a3ea6', accent2:'#241b3f', need:190000, desc:'Stem Player, эксклюзив, только для избранных.' },
+    { id:'vultures',   name:'VULTURES', year:'2024', icon:'🦅', accent:'#8a1f1f', accent2:'#2c0a0a', need:420000, desc:'Ye × Ty Dolla $ign, ¥$, хищный саунд.' },
+    { id:'bully',      name:'BULLY', year:'2025', icon:'🐂', accent:'#e0851f', accent2:'#5c3410', need:900000, desc:'Новейшая эра. Сырость, эксперимент, провокация.' },
+  ];
+
+  const CLICK_UPGRADES = [
+    { id:'cu1', name:'Chipmunk Soul', icon:'🐿️', desc:'Ускоренные вокальные сэмплы — фирменный приём ранних битов.', baseCost:25,  mult:2,  addPerClick:1,  maxLevel:8 },
+    { id:'cu2', name:'MPC-сэмплер', icon:'🎹', desc:'Классический сэмплер для нарезки соул-луп.', baseCost:120, mult:1.9, addPerClick:3,  maxLevel:8 },
+    { id:'cu3', name:'Продюсерский слух', icon:'🎧', desc:'Ye лично отбирает сэмплы для трека.', baseCost:600, mult:1.85,addPerClick:8,  maxLevel:8 },
+    { id:'cu4', name:'Studio God Mode', icon:'⚡', desc:'Ночная сессия в студии без остановки.', baseCost:3000, mult:1.8, addPerClick:25, maxLevel:6 },
+    { id:'cu5', name:'Louis Vuitton Don', icon:'👑', desc:'Абсолютная роскошь. Самый дорогой и мощный апгрейд клика — каждый удар по медведю теперь на вес золота.', baseCost:60000, mult:1.9, addPerClick:200, maxLevel:6 },
+  ];
+
+  const PASSIVE_UPGRADES = [
+    { id:'pu1', name:'Уличная торговля битами', icon:'💿', desc:'Продажа битов на дисках прямо у метро приносит стабильный доход.', baseCost:60,  mult:1.9, ps:1, maxLevel:8 },
+    { id:'pu2', name:'Feature на треке', icon:'🎤', desc:'Другие артисты платят за фит.', baseCost:300, mult:1.85, ps:5, maxLevel:8 },
+    { id:'pu3', name:'GOOD Music Label', icon:'🏢', desc:'Лейбл приносит роялти круглые сутки.', baseCost:2500, mult:1.8, ps:22, maxLevel:8 },
+    { id:'pu4', name:'YZY DROP', icon:'👟', desc:'Очередной дроп кроссовок раскупают за секунды.', baseCost:15000, mult:1.75, ps:90, maxLevel:8 },
+    { id:'pu5', name:'YEEZY OVER EVERYTHING', icon:'🌀', desc:'Вещи YEEZY покупают во всем мире.', baseCost:35000, mult:1.7, ps:400, maxLevel:6 },
+  ];
+
+  const SHOP_ITEMS = [
+    { id:'sh1', name:'Nike Air Yeezy 1', icon:'👟', desc:'Дебютный кроссовок, тот самый прорыв 2009.', cost:800,   click:2 },
+    { id:'sh3', name:'Yeezy Boost 350', icon:'🥾', desc:'Самая массовая модель, изменившая индустрию.', cost:4000,  click:5 },
+    { id:'sh9', name:'Roc-A-Fella Chain', icon:'💎', desc:'Цепь лейбла, с которого всё начиналось.', cost:9000, click:10 },
+    { id:'sh10', name:'Yeezus CD', icon:'💽', desc:'Тот самый минималистичный диск без обложки.', cost:22000, click:22 },
+    { id:'sh11', name:'Donda Chain', icon:'⛓️', desc:'Чёрная монолитная цепь эпохи Donda — стадионы замолкают.', cost:26000, click:32 },
+    { id:'sh6', name:'YZY Gap Hoodie', icon:'👕', desc:'Гигантский силуэт коллаборации с Gap.', cost:42000, click:45 },
+    { id:'sh8', name:'VULTURES LONGSLEEVE', icon:'🦅', desc:'Лонгслив новой эры ¥$.', cost:110000, click:120 },
+  ];
+
+  const FEATURES = [
+    { id:'f1', name:'Jay-Z', icon:'🗽', desc:'Watch The Throne. Легендарный дуэт двух королей рэпа.', unlockPoints:500 },
+    { id:'f2', name:'Kid Cudi', icon:'🌙', desc:'Соавтор MBDTF, космический голос эпохи.', unlockPoints:1300 },
+    { id:'f3', name:'Pusha T', icon:'🐍', desc:'GOOD Music president, суровые панчи.', unlockPoints:3200 },
+    { id:'f4', name:'Travis Scott', icon:'🔥', desc:'Продюсерская работа над Донду и совместные шоу.', unlockPoints:17000 },
+    { id:'f5', name:'Sunday Service Choir', icon:'⛪', desc:'Хор, изменивший звучание Jesus Is King.', unlockPoints:38000 },
+    { id:'f6', name:'Ty Dolla $ign', icon:'🦅', desc:'Половина дуэта ¥$ в VULTURES.', unlockPoints:420000 },
+    { id:'f7', name:'Playboi Carti', icon:'🩸', desc:'Фит новой волны, сырой и хаотичный саунд.', unlockPoints:900000 },
+  ];
+
+  const ACHIEVEMENTS = [
+    { id:'a1', name:'Dropout', icon:'🎓', desc:'Открой эру The College Dropout.', check:(s)=> s.eraIndex>=0 },
+    { id:'a2', name:'Stronger', icon:'⚡', desc:'Набери 1000 очков.', check:(s)=> s.totalEarned>=1000 },
+    { id:'a3', name:'Chipmunk Flip', icon:'🐿️', desc:'Купи апгрейд Chipmunk Soul.', check:(s)=> s.upgrades['cu1']>=1 },
+    { id:'a4', name:'Yeezus', icon:'⛔', desc:'Открой эру Yeezus.', check:(s)=> s.eraIndex>=5 },
+    { id:'a5', name:'Saint Pablo', icon:'🕊️', desc:'Открой эру The Life of Pablo.', check:(s)=> s.eraIndex>=6 },
+    { id:'a6', name:'Sunday Service', icon:'⛪', desc:'Открой эру Jesus Is King.', check:(s)=> s.eraIndex>=8 },
+    { id:'a7', name:'Donda', icon:'🖤', desc:'Открой эру Donda.', check:(s)=> s.eraIndex>=9 },
+    { id:'a8', name:'VULTURES', icon:'🦅', desc:'Открой эру VULTURES.', check:(s)=> s.eraIndex>=11 },
+    { id:'a9', name:'BULLY', icon:'🐂', desc:'Дойди до последней эры — BULLY.', check:(s)=> s.eraIndex>=12 },
+    { id:'a10', name:'Louis Vuitton Don', icon:'💰', desc:'Купи апгрейд Louis Vuitton Don.', check:(s)=> s.upgrades['cu5']>=1 },
+    { id:'a11', name:'Полный гардероб', icon:'👕', desc:'Купи все вещи на YEEZY.COM.', check:(s)=> SHOP_ITEMS.every(it=>s.shopOwned[it.id]) },
+    { id:'a12', name:'Watch The Throne', icon:'🗽', desc:'Открой фит с Jay-Z.', check:(s)=> s.totalClickEarned>=500 },
+    { id:'a13', name:'Миллионер', icon:'💎', desc:'Заработай суммарно 1 000 000 очков.', check:(s)=> s.totalEarned>=1000000 },
+    { id:'a14', name:'Кликер-марафон', icon:'🖱️', desc:'Сделай 1000 кликов.', check:(s)=> s.totalClicks>=1000 },
+    { id:'a15', name:'Late Registration', icon:'🧸', desc:'Открой эру Late Registration.', check:(s)=> s.eraIndex>=1 },
+    { id:'a16', name:'Graduation', icon:'🌈', desc:'Открой эру Graduation.', check:(s)=> s.eraIndex>=2 },
+    { id:'a17', name:'Heartbreak', icon:'💔', desc:'Открой эру 808s & Heartbreak.', check:(s)=> s.eraIndex>=3 },
+    { id:'a18', name:'Dark Fantasy', icon:'🩰', desc:'Открой эру My Beautiful Dark Twisted Fantasy.', check:(s)=> s.eraIndex>=4 },
+    { id:'a19', name:'Вайоминг', icon:'🏔️', desc:'Открой эру ye.', check:(s)=> s.eraIndex>=7 },
+    { id:'a20', name:'Stem Player', icon:'🌀', desc:'Открой эру Donda 2.', check:(s)=> s.eraIndex>=10 },
+    { id:'a21', name:'Продюсер года', icon:'🎧', desc:'Прокачай Продюсерский слух до максимума.', check:(s)=> (s.upgrades['cu3']||0)>=8 },
+    { id:'a22', name:'Studio God', icon:'⚡', desc:'Прокачай Studio God Mode до максимума.', check:(s)=> (s.upgrades['cu4']||0)>=6 },
+    { id:'a23', name:'Лейбл-магнат', icon:'🏢', desc:'Прокачай GOOD Music Label до максимума.', check:(s)=> (s.upgrades['pu3']||0)>=8 },
+    { id:'a24', name:'Мировой дроп', icon:'👟', desc:'Прокачай YZY DROP до максимума.', check:(s)=> (s.upgrades['pu4']||0)>=8 },
+  ];
+
+  const BEAR_STAGES = [
+    { id:'b1', name:'Dropout Bear', icon:'🐻', need:0, desc:'Классический плюшевый медведь с The College Dropout. Начало пути.' },
+    { id:'b2', name:'Graduate Bear', icon:'🎓', need:180, desc:'Медведь в мантии и академической шапке — эпоха Graduation.' },
+    { id:'b3', name:'Heartbreak Bear', icon:'💔', need:500, desc:'Автотюн-медведь, разбитый и электронный — 808s & Heartbreak.' },
+    { id:'b4', name:'Dark Fantasy Bear', icon:'🩰', need:1300, desc:'Максималистичный медведь-монстр эпохи MBDTF.' },
+    { id:'b5', name:'Yeezus Bear', icon:'⛔', need:3200, desc:'Минималистичная маска вместо морды — индастриал Yeezus.' },
+    { id:'b6', name:'Pablo Bear', icon:'🕊️', need:7500, desc:'Медведь-путник, всё ещё в поиске себя — The Life of Pablo.' },
+    { id:'b7', name:'Ye Bear', icon:'🏔️', need:17000, desc:'Медведь на фоне гор Вайоминга — альбом ye.' },
+    { id:'b8', name:'Sunday Bear', icon:'✝️', need:38000, desc:'Медведь в хоре Sunday Service — Jesus Is King.' },
+    { id:'b9', name:'Donda Bear', icon:'🖤', need:85000, desc:'Медведь в чёрной маске, весь стадион молчит.' },
+    { id:'b10', name:'Vulture Bear', icon:'🦅', need:420000, desc:'Хищная версия медведя — эпоха ¥$ VULTURES.' },
+    { id:'b11', name:'Bully Bear', icon:'🐂', need:900000, desc:'Финальная форма — необузданная эра BULLY.' },
+  ];
+
+  /* =========================================================
+     STATE
+     ========================================================= */
+
+  const SAVE_KEY = 'ye_clicker_save_v1';
+  const SAVE_KEY_BACKUP = 'ye_clicker_save_v1_backup';
+
+  let state = {
+    points: 0,
+    totalEarned: 0,
+    totalClickEarned: 0, // только очки, заработанные кликами — используется для прогресса эр
+    totalClicks: 0,
+    maxSingleClickGain: 0, // наибольшее количество очков, полученное за один клик (для ачивок)
+    basePerClick: 1,
+    perSecond: 0,
+    eraClickBonus: 0,   // +1 за клик за каждую пройденную эру
+    eraPassiveBonus: 0, // +1/сек за каждую пройденную эру
+    upgrades: {},      // id -> level
+    shopOwned: {},      // id -> true
+    achievementsUnlocked: {}, // id -> true
+    eraIndex: 0,
+    buffs: [],          // {id, label, mult, expiresAt}
+    title: null,         // 'Louis Vuitton Don' после первого полного прохождения игры
+    completions: 0,      // сколько раз игра была полностью пройдена
+  };
+
+  // Флаг блокирует любые фоновые saveState() (beforeunload/pagehide/visibilitychange)
+  // сразу после подтверждённого сброса, чтобы старое состояние из памяти не
+  // успело перезаписать только что очищенный localStorage перед перезагрузкой страницы.
+  let resetInProgress = false;
+
+  function readSaveRaw(key){
+    try{
+      const raw = localStorage.getItem(key);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      // простая валидация: сохранение должно быть объектом с ожидаемыми полями
+      if(!parsed || typeof parsed !== 'object') return null;
+      return parsed;
+    }catch(e){
+      return null; // повреждённый JSON — не считаем это валидным сохранением
+    }
+  }
+
+  function loadState(){
+    // Пытаемся прочитать основное сохранение, а если оно повреждено или отсутствует —
+    // резервную копию. Если ни одного валидного сохранения нет — начинаем с чистого
+    // состояния (дефолтный state, объявленный выше).
+    let parsed = readSaveRaw(SAVE_KEY);
+    let usedBackup = false;
+    if(!parsed){
+      parsed = readSaveRaw(SAVE_KEY_BACKUP);
+      usedBackup = parsed ? true : false;
+    }
+
+    if(parsed){
+      state = Object.assign({}, state, parsed);
+      // глубокое слияние для вложенных объектов, чтобы новые поля (например,
+      // после обновления игры) не терялись и не затирали старые ключи
+      state.upgrades = Object.assign({}, parsed.upgrades || {});
+      state.shopOwned = Object.assign({}, parsed.shopOwned || {});
+      state.achievementsUnlocked = Object.assign({}, parsed.achievementsUnlocked || {});
+      state.buffs = []; // не восстанавливаем временные баффы между сессиями
+      if(usedBackup){
+        // основное сохранение было повреждено — сразу восстанавливаем его из бэкапа
+        try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+      }
+    }
+  }
+
+  function saveState(){
+    if(resetInProgress) return; // не даём фоновым обработчикам записать состояние поверх сброса
+    try{
+      const payload = JSON.stringify(state);
+      localStorage.setItem(SAVE_KEY, payload);
+      // держим отдельную резервную копию на случай повреждения основного ключа
+      // (например, если запись прервётся на середине)
+      localStorage.setItem(SAVE_KEY_BACKUP, payload);
+    }catch(e){ /* хранилище недоступно (приватный режим, квота и т.д.) — не падаем */ }
+  }
+
+  /* =========================================================
+     DERIVED VALUES
+     ========================================================= */
+
+  function currentEra(){
+    let idx = 0;
+    for(let i=0;i<ERAS.length;i++){
+      if(state.totalClickEarned >= ERAS[i].need) idx = i;
+    }
+    return idx;
+  }
+
+  function buffMultiplier(){
+    const now = Date.now();
+    state.buffs = state.buffs.filter(b=>b.expiresAt > now);
+    let mult = 1;
+    state.buffs.forEach(b=> mult *= b.mult);
+    return mult;
+  }
+
+  function perClickValue(){
+    let val = state.basePerClick + state.eraClickBonus;
+    CLICK_UPGRADES.forEach(u=>{
+      const lvl = state.upgrades[u.id] || 0;
+      val += lvl * u.addPerClick;
+    });
+    SHOP_ITEMS.forEach(it=>{
+      if(state.shopOwned[it.id]) val += it.click;
+    });
+    val *= buffMultiplier();
+    return val;
+  }
+
+  function perSecondValue(){
+    let val = state.eraPassiveBonus;
+    PASSIVE_UPGRADES.forEach(u=>{
+      const lvl = state.upgrades[u.id] || 0;
+      val += lvl * u.ps;
+    });
+    return val;
+  }
+
+  function upgradeCost(base, mult, level){
+    return Math.ceil(base * Math.pow(mult, level));
+  }
+
+  function fmt(n){
+    n = Math.floor(n);
+    if(n < 1000) return String(n);
+    const units = ['','K','M','B','T','Qa','Qi'];
+    let u = 0;
+    let v = n;
+    while(v >= 1000 && u < units.length-1){ v/=1000; u++; }
+    return v.toFixed(v<10?2:(v<100?1:0)) + units[u];
+  }
+
+  /* =========================================================
+     RENDER: THEME
+     ========================================================= */
+
+  function applyEraTheme(){
+    const idx = state.eraIndex;
+    const era = ERAS[idx];
+    document.documentElement.style.setProperty('--era-accent', era.accent);
+    document.documentElement.style.setProperty('--era-accent-2', era.accent2);
+    document.getElementById('eraName').textContent = era.name;
+    document.getElementById('eraYear').textContent = era.year;
+    document.getElementById('eraIcon').textContent = era.icon;
+  }
+
+  /* =========================================================
+     RENDER: MAIN STATS
+     ========================================================= */
+
+  function renderStats(){
+    document.getElementById('pointsVal').textContent = fmt(state.points);
+    document.getElementById('perClickVal').textContent = fmt(perClickValue());
+    document.getElementById('perSecVal').textContent = fmt(perSecondValue());
+
+    // era progress
+    const idx = state.eraIndex;
+    const next = ERAS[idx+1];
+    const bar = document.getElementById('eraBarFill');
+    const label = document.getElementById('eraProgLabel');
+    const num = document.getElementById('eraProgNum');
+    if(next){
+      const prevNeed = ERAS[idx].need;
+      const span = next.need - prevNeed;
+      const done = Math.min(1, Math.max(0,(state.totalClickEarned - prevNeed) / span));
+      bar.style.width = (done*100).toFixed(1)+'%';
+      label.textContent = 'До эры «'+next.name+'»';
+      num.textContent = fmt(state.totalClickEarned)+' / '+fmt(next.need);
+    } else {
+      bar.style.width = '100%';
+      label.textContent = 'Максимальная эра достигнута';
+      num.textContent = fmt(state.totalClickEarned);
+    }
+
+    // buffs
+    const buffRow = document.getElementById('buffRow');
+    buffRow.innerHTML = '';
+    state.buffs.forEach(b=>{
+      const chip = document.createElement('div');
+      chip.className = 'buff-chip';
+      const secsLeft = Math.max(0, Math.ceil((b.expiresAt - Date.now())/1000));
+      chip.textContent = b.label + ' · ' + secsLeft + 's';
+      buffRow.appendChild(chip);
+    });
+
+    const btn = document.getElementById('clickBtn');
+    if(state.buffs.length>0){ btn.classList.add('pulse'); } else { btn.classList.remove('pulse'); }
+  }
+
+  /* =========================================================
+     RENDER: UPGRADES
+     ========================================================= */
+
+  function renderUpgradeCard(container, u, isPassive){
+    const level = state.upgrades[u.id] || 0;
+    const maxed = level >= u.maxLevel;
+    const cost = upgradeCost(u.baseCost, u.mult, level);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-icon">${u.icon}</div>
+      <div class="card-body">
+        <div class="card-title">${u.name} ${level>0 ? '<span style="color:var(--dim);font-weight:400">Lv.'+level+'</span>':''}</div>
+        <div class="card-desc">${u.desc}</div>
+        <div class="card-meta">${isPassive ? '+'+fmt(u.ps)+'/сек за уровень' : '+'+fmt(u.addPerClick)+' за клик за уровень'}</div>
+      </div>
+      <div class="card-action"></div>
+    `;
+    const actionSlot = card.querySelector('.card-action');
+    if(maxed){
+      const tag = document.createElement('div');
+      tag.className = 'owned-tag';
+      tag.textContent = 'MAX';
+      actionSlot.appendChild(tag);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'buy-btn';
+      btn.textContent = fmt(cost);
+      btn.disabled = state.points < cost;
+      btn.onclick = ()=>{
+        if(state.points < cost) return;
+        state.points -= cost;
+        state.upgrades[u.id] = level + 1;
+        state.perSecond = perSecondValue();
+        renderAll();
+        saveState();
+      };
+      actionSlot.appendChild(btn);
+    }
+    container.appendChild(card);
+  }
+
+  function renderUpgrades(){
+    const clickList = document.getElementById('clickUpgradesList');
+    const passiveList = document.getElementById('passiveUpgradesList');
+    clickList.innerHTML = '';
+    passiveList.innerHTML = '';
+    CLICK_UPGRADES.forEach(u=> renderUpgradeCard(clickList, u, false));
+    PASSIVE_UPGRADES.forEach(u=> renderUpgradeCard(passiveList, u, true));
+  }
+
+  /* =========================================================
+     RENDER: ERAS
+     ========================================================= */
+
+  function renderEras(){
+    const list = document.getElementById('erasList');
+    list.innerHTML = '';
+    ERAS.forEach((era, i)=>{
+      const unlocked = state.totalClickEarned >= era.need;
+      const card = document.createElement('div');
+      card.className = 'card' + (unlocked ? '' : ' locked');
+      card.innerHTML = `
+        <div class="card-icon">${era.icon}</div>
+        <div class="card-body">
+          <div class="card-title">${era.name} <span style="color:var(--dim);font-weight:400">${era.year}</span></div>
+          <div class="card-desc">${unlocked ? era.desc : 'Заблокировано'}</div>
+          <div class="card-meta">${unlocked ? 'Открыто' : 'Нужно '+fmt(era.need)+' очков суммарно'}</div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  /* =========================================================
+     RENDER: SHOP
+     ========================================================= */
+
+  function renderShop(){
+    const list = document.getElementById('shopList');
+    list.innerHTML = '';
+    SHOP_ITEMS.forEach(it=>{
+      const owned = !!state.shopOwned[it.id];
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-icon">${it.icon}</div>
+        <div class="card-body">
+          <div class="card-title">${it.name}</div>
+          <div class="card-desc">${it.desc}</div>
+          <div class="card-meta">+${fmt(it.click)} за клик навсегда</div>
+        </div>
+        <div class="card-action"></div>
+      `;
+      const actionSlot = card.querySelector('.card-action');
+      if(owned){
+        const tag = document.createElement('div');
+        tag.className = 'owned-tag';
+        tag.textContent = 'В гардеробе';
+        actionSlot.appendChild(tag);
+      } else {
+        const btn = document.createElement('button');
+        btn.className = 'buy-btn';
+        btn.textContent = fmt(it.cost);
+        btn.disabled = state.points < it.cost;
+        btn.onclick = ()=>{
+          if(state.points < it.cost) return;
+          state.points -= it.cost;
+          state.shopOwned[it.id] = true;
+          renderAll();
+          saveState();
+        };
+        actionSlot.appendChild(btn);
+      }
+      list.appendChild(card);
+    });
+  }
+
+  /* =========================================================
+     RENDER: FEATURES
+     ========================================================= */
+
+  function renderFeatures(){
+    const list = document.getElementById('featuresList');
+    list.innerHTML = '';
+    FEATURES.forEach(f=>{
+      const unlocked = state.totalClickEarned >= f.unlockPoints;
+      const card = document.createElement('div');
+      card.className = 'card' + (unlocked ? '' : ' locked');
+      card.innerHTML = `
+        <div class="card-icon">${f.icon}</div>
+        <div class="card-body">
+          <div class="card-title">${f.name}</div>
+          <div class="card-desc">${unlocked ? f.desc : 'Заблокировано'}</div>
+          <div class="card-meta">${unlocked ? 'Открыт фит' : 'Нужно '+fmt(f.unlockPoints)+' очков суммарно'}</div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  /* =========================================================
+     RENDER: ACHIEVEMENTS
+     ========================================================= */
+
+  function renderAchievements(){
+    const list = document.getElementById('achievementsList');
+    list.innerHTML = '';
+    const unlockedCount = ACHIEVEMENTS.filter(a=>!!state.achievementsUnlocked[a.id]).length;
+    const countEl = document.getElementById('achievementsCount');
+    if(countEl) countEl.textContent = '('+unlockedCount+' / '+ACHIEVEMENTS.length+')';
+    const tabCountEl = document.getElementById('achievementsTabCount');
+    if(tabCountEl) tabCountEl.textContent = unlockedCount+'/'+ACHIEVEMENTS.length;
+    ACHIEVEMENTS.forEach(a=>{
+      const unlocked = !!state.achievementsUnlocked[a.id];
+      const card = document.createElement('div');
+      card.className = 'card' + (unlocked ? '' : ' locked');
+      card.innerHTML = `
+        <div class="card-icon">${a.icon}</div>
+        <div class="card-body">
+          <div class="card-title">${a.name}</div>
+          <div class="card-desc">${a.desc}</div>
+        </div>
+        <div class="card-action">${unlocked ? '<div class="owned-tag">✓</div>' : ''}</div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function checkAchievements(){
+    let anyNew = false;
+    ACHIEVEMENTS.forEach(a=>{
+      if(!state.achievementsUnlocked[a.id] && a.check(state)){
+        state.achievementsUnlocked[a.id] = true;
+        anyNew = true;
+        showToast('🏆 Ачивка: '+a.name, a.desc);
+      }
+    });
+    return anyNew;
+  }
+
+  /* =========================================================
+     PRESTIGE — полное прохождение игры
+     ========================================================= */
+
+  function isGameComplete(s){
+    const allClickUpgradesMaxed = CLICK_UPGRADES.every(u => (s.upgrades[u.id]||0) >= u.maxLevel);
+    const allPassiveUpgradesMaxed = PASSIVE_UPGRADES.every(u => (s.upgrades[u.id]||0) >= u.maxLevel);
+    const allShopOwned = SHOP_ITEMS.every(it => !!s.shopOwned[it.id]);
+    const allErasUnlocked = s.totalClickEarned >= ERAS[ERAS.length-1].need;
+    const allAchievementsUnlocked = ACHIEVEMENTS.every(a => !!s.achievementsUnlocked[a.id]);
+    return allClickUpgradesMaxed && allPassiveUpgradesMaxed && allShopOwned && allErasUnlocked && allAchievementsUnlocked;
+  }
+
+  function checkPrestige(){
+    if(state.title) return; // титул уже присвоен — повторно не триггерим модалку
+    if(isGameComplete(state)){
+      state.title = 'Louis Vuitton Don';
+      saveState();
+      renderPlayerTitle();
+      const modal = document.getElementById('prestigeModal');
+      if(modal) modal.classList.add('open');
+    }
+  }
+
+  function renderPlayerTitle(){
+    const el = document.getElementById('playerTitle');
+    if(!el) return;
+    if(state.title){
+      el.style.display = 'inline-flex';
+      el.textContent = '👑 ' + state.title + (state.completions>0 ? ' · Прохождений: '+state.completions : '');
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  function restartWithTitle(){
+    const keptTitle = state.title;
+    const keptCompletions = (state.completions||0) + 1;
+    // Блокируем фоновые saveState() ДО удаления сохранений — та же защита от гонки,
+    // что и в обычном сбросе прогресса.
+    resetInProgress = true;
+    try{
+      localStorage.removeItem(SAVE_KEY);
+      localStorage.removeItem(SAVE_KEY_BACKUP);
+      // сохраняем титул и счётчик прохождений отдельно, чтобы они пережили сброс
+      sessionStorage.setItem('ye_clicker_kept_title', keptTitle);
+      sessionStorage.setItem('ye_clicker_kept_completions', String(keptCompletions));
+    }catch(e){}
+    window.location.reload();
+  }
+
+  /* =========================================================
+     RENDER: BEAR
+     ========================================================= */
+
+  function currentBearStage(){
+    let idx = 0;
+    for(let i=0;i<BEAR_STAGES.length;i++){
+      if(state.totalClickEarned >= BEAR_STAGES[i].need) idx = i;
+    }
+    return idx;
+  }
+
+  function renderBear(){
+    // Вкладка "Медведь" убрана из UI, но иконка медведя на кнопке клика
+    // по-прежнему эволюционирует вместе с прогрессом — это часть механики клика.
+    const idx = currentBearStage();
+    const stage = BEAR_STAGES[idx];
+    const clickBtn = document.getElementById('clickBtn');
+    if(clickBtn) clickBtn.textContent = stage.icon;
+  }
+
+  /* =========================================================
+     TOASTS
+     ========================================================= */
+
+  function levelUpEra(newEraIdx){
+    state.eraIndex = newEraIdx;
+    state.eraClickBonus += 1;
+    state.eraPassiveBonus += 1;
+    applyEraTheme();
+    showToast('💿 Новая эра!', ERAS[newEraIdx].name+' — фон и звучание меняются. +1 к клику, +1/сек навсегда.');
+  }
+
+  function showToast(title, desc){
+    const stack = document.getElementById('toastStack');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `<b>${title}</b>${desc||''}`;
+    stack.appendChild(t);
+    setTimeout(()=>{ t.remove(); }, 3200);
+  }
+
+  /* =========================================================
+     RANDOM EVENTS (samples)
+     ========================================================= */
+
+  const SAMPLE_EVENTS = [
+    { label:'Найден сэмпл! x2', mult:2, duration:15000 },
+    { label:'Редкий соул-луп! x3', mult:3, duration:12000 },
+    { label:'Легендарный сэмпл! x5', mult:5, duration:8000 },
+  ];
+
+  function maybeTriggerSample(){
+    if(Math.random() < 0.006){ // small chance per tick
+      const ev = SAMPLE_EVENTS[Math.floor(Math.random()*SAMPLE_EVENTS.length)];
+      state.buffs.push({
+        id: 'sample_'+Date.now(),
+        label: '🎹 '+ev.label,
+        mult: ev.mult,
+        expiresAt: Date.now() + ev.duration
+      });
+      showToast('🎹 Ye нашёл новый сэмпл!', ev.label+' на '+(ev.duration/1000)+' секунд');
+    }
+  }
+
+  /* =========================================================
+     CLICK HANDLING
+     ========================================================= */
+
+  function triggerHaptic(){
+    // Задействуем Taptic Engine / вибромотор устройства при тапе
+    if(window.navigator && typeof window.navigator.vibrate === 'function'){
+      window.navigator.vibrate(10);
+    }
+  }
+
+  function handleClick(evt){
+    triggerHaptic();
+    const gained = perClickValue();
+    state.points += gained;
+    state.totalEarned += gained;
+    state.totalClickEarned += gained;
+    state.totalClicks += 1;
+    if(gained > state.maxSingleClickGain) state.maxSingleClickGain = gained;
+
+    spawnFloatingText(evt, '+'+fmt(gained));
+
+    const newEra = currentEra();
+    if(newEra !== state.eraIndex){
+      levelUpEra(newEra);
+    }
+
+    checkAchievements();
+    checkPrestige();
+    renderAll();
+    saveState();
+  }
+
+  function spawnFloatingText(evt, text){
+    const stage = document.querySelector('.stage');
+    const rect = stage.getBoundingClientRect();
+    const btn = document.getElementById('clickBtn');
+    const btnRect = btn.getBoundingClientRect();
+
+    let x = btnRect.width/2, y = 20;
+    if(evt && evt.touches && evt.touches[0]){
+      x = evt.touches[0].clientX - btnRect.left;
+      y = evt.touches[0].clientY - btnRect.top;
+    } else if(evt && typeof evt.offsetX === 'number'){
+      x = evt.offsetX; y = evt.offsetY;
+    }
+
+    const el = document.createElement('div');
+    el.className = 'float-pts';
+    el.textContent = text;
+    el.style.left = (btn.offsetLeft + x) + 'px';
+    el.style.top = (btn.offsetTop + y) + 'px';
+    stage.appendChild(el);
+    setTimeout(()=> el.remove(), 950);
+  }
+
+  /* =========================================================
+     TABS
+     ========================================================= */
+
+  function setupTabs(){
+    const btns = document.querySelectorAll('.tab-btn');
+    btns.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        btns.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+        document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+      });
+    });
+  }
+
+  /* =========================================================
+     MAIN RENDER LOOP
+     ========================================================= */
+
+  function renderAll(){
+    renderStats();
+    renderUpgrades();
+    renderEras();
+    renderShop();
+    renderFeatures();
+    renderAchievements();
+    renderBear();
+    renderPlayerTitle();
+  }
+
+  /* =========================================================
+     GAME LOOP
+     ========================================================= */
+
+  let lastTick = Date.now();
+  function gameLoop(){
+    const now = Date.now();
+    const dt = (now - lastTick) / 1000;
+    lastTick = now;
+
+    const ps = perSecondValue();
+    if(ps > 0){
+      const gained = ps * dt;
+      state.points += gained;
+      state.totalEarned += gained;
+    }
+
+    maybeTriggerSample();
+
+    const newEra = currentEra();
+    if(newEra !== state.eraIndex){
+      levelUpEra(newEra);
+    }
+
+    checkAchievements();
+    checkPrestige();
+    renderStats(); // lightweight per-tick update
+    saveState();
+  }
+
+  /* =========================================================
+     RESET
+     ========================================================= */
+
+  function setupResetButton(){
+    const btn = document.getElementById('resetBtn');
+    const modal = document.getElementById('resetModal');
+    const cancelBtn = document.getElementById('resetCancelBtn');
+    const confirmBtn = document.getElementById('resetConfirmBtn');
+    if(!btn || !modal || !cancelBtn || !confirmBtn) return;
+
+    const openModal = ()=> modal.classList.add('open');
+    const closeModal = ()=> modal.classList.remove('open');
+
+    btn.addEventListener('click', openModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{
+      if(e.target === modal) closeModal();
+    });
+    confirmBtn.addEventListener('click', ()=>{
+      // Блокируем фоновые saveState() ДО удаления сохранений, иначе beforeunload/
+      // pagehide успеет пересохранить старое состояние из памяти поверх пустого localStorage.
+      resetInProgress = true;
+      try{
+        localStorage.removeItem(SAVE_KEY);
+        localStorage.removeItem(SAVE_KEY_BACKUP);
+      }catch(e){}
+      window.location.reload();
+    });
+  }
+
+  function setupPrestigeModal(){
+    const modal = document.getElementById('prestigeModal');
+    const restartBtn = document.getElementById('prestigeRestartBtn');
+    if(!modal || !restartBtn) return;
+    restartBtn.addEventListener('click', restartWithTitle);
+  }
+
+  /* =========================================================
+     INIT
+     ========================================================= */
+
+  function init(){
+    loadState();
+    // переносим титул и счётчик прохождений через сброс, инициированный кнопкой
+    // "Начать заново с титулом" в модалке полного прохождения игры
+    try{
+      const keptTitle = sessionStorage.getItem('ye_clicker_kept_title');
+      if(keptTitle){
+        state.title = keptTitle;
+        state.completions = parseInt(sessionStorage.getItem('ye_clicker_kept_completions')||'0', 10) || 0;
+        sessionStorage.removeItem('ye_clicker_kept_title');
+        sessionStorage.removeItem('ye_clicker_kept_completions');
+        saveState();
+      }
+    }catch(e){}
+    // миграция старых сохранений: раньше не было отдельного счётчика кликовых очков
+    if(state.totalClickEarned === undefined){
+      state.totalClickEarned = state.totalEarned || 0;
+    }
+    if(state.maxSingleClickGain === undefined){
+      state.maxSingleClickGain = 0;
+    }
+    const actualEra = currentEra();
+    // миграция старых сохранений (до введения бонусов за эры):
+    // выполняется один раз, только если бонус ещё вообще не считался
+    if(state.eraClickBonus === undefined){
+      state.eraClickBonus = actualEra;
+      state.eraPassiveBonus = actualEra;
+    }
+    state.eraIndex = actualEra;
+    applyEraTheme();
+    setupTabs();
+    setupResetButton();
+    setupPrestigeModal();
+
+    const btn = document.getElementById('clickBtn');
+    btn.addEventListener('click', (e)=> handleClick(e));
+
+    renderAll();
+    checkPrestige();
+
+    setInterval(gameLoop, 300);
+    // full re-render periodically to refresh buy button disabled states etc.
+    setInterval(renderAll, 1500);
+
+    // дополнительные точки сохранения, чтобы прогресс не терялся при закрытии
+    // вкладки/сворачивании приложения между тиками игрового цикла
+    window.addEventListener('beforeunload', saveState);
+    window.addEventListener('pagehide', saveState);
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'hidden') saveState();
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
